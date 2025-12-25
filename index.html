@@ -5,66 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setlist Manager Pro</title>
+    
+    <!-- Eksterne biblioteker -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Babel Standalone: Gør det muligt at køre .tsx direkte i browseren på GitHub Pages -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --stage-bg: #020617;
-        }
-        body {
-            background-color: var(--stage-bg);
-            color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            overflow: hidden;
-        }
-        .mono { font-family: 'JetBrains+Mono', monospace; }
-        
-        .jazz-bg {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), 
-                              url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2500&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-
-        @media screen {
-            .print-only { display: none !important; }
-        }
-        
-        @media print {
-            @page { margin: 1cm; size: A4; }
-            body { background: white !important; color: black !important; overflow: visible !important; }
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            .page-break { page-break-after: always; break-after: page; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-
-        .glass-panel {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-        }
-        
-        .glass-header {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .text-shadow-sm {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-    </style>
+    
     <script type="importmap">
 {
   "imports": {
@@ -77,12 +23,269 @@
   }
 }
 </script>
+
+    <style>
+        :root { --stage-bg: #020617; }
+        body {
+            background-color: var(--stage-bg);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+        .jazz-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), 
+                              url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2500&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+        .glass-header {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @media print {
+            body { background: white !important; color: black !important; overflow: visible !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .page-break { page-break-after: always; }
+        }
+        @media screen { .print-only { display: none !important; } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
-    <!-- type="text/babel" fortæller Babel at den skal transpilere denne fil -->
-    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
+
+    <script type="text/babel" data-presets="react">
+        import React, { useState, useEffect, useMemo } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { 
+            Music, ListMusic, Printer, Wand2, Star, 
+            LayoutGrid, HelpCircle, X, GripVertical, 
+            Trash2, Edit2, Plus, Download, Upload, RotateCcw,
+            ArrowUpDown
+        } from 'lucide-react';
+
+        // --- CONSTANTS & TYPES ---
+        const createSong = (title, key, tempo, notes, cues = '') => ({
+            uid: Math.random().toString(36).substr(2, 9),
+            title, key, tempo, notes, cues,
+            createdAt: Date.now()
+        });
+
+        const INITIAL_DATA = {
+            concertName: 'Jazz Quartet Live',
+            columns: {
+                set1: [],
+                rep: [
+                    createSong('All The Things You Are', 'Cm/eb', '138', 'Intro (4 sidste t.); vokal+sax', ''),
+                    createSong('Dansevise', 'Am', '160', 'Intro (8t u.sax); vokal; solo sax', ''),
+                    createSong('Desafinado', 'F', '132', 'Intro 8t u.sax; vokal; solo sax', ''),
+                    createSong('Nature Boy', 'Dm', '108', 'Intro (bas4t+gui4t); vokal', ''),
+                    createSong('Wave', 'Eb', '126', 'Intro 8t; vokal; solo gui', ''),
+                    createSong('Autumn Leaves', 'Cm', '138', 'Intro sax (rubato); vokal', ''),
+                ],
+                set2: [],
+            },
+            locks: { col: { set1: false, rep: false, set2: false }, items: {} }
+        };
+
+        // --- COMPONENTS ---
+        const SongCard = ({ song, index, colType, isLocked, onToggleLock, onPointerDown }) => (
+            <div className={`group relative select-none rounded-2xl border transition-all duration-300 ${isLocked ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/5 bg-white/[0.03] hover:bg-white/[0.08]'}`}>
+                <div className="flex items-center gap-3 p-3">
+                    <div 
+                        onPointerDown={!isLocked ? (e) => onPointerDown(e, song, colType) : undefined}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-black ${isLocked ? 'bg-amber-500 text-amber-950' : 'bg-white/5 text-slate-500 cursor-grab active:cursor-grabbing'}`}
+                    >
+                        {!isLocked ? <GripVertical size={18} /> : (index + 1)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                            <h4 className="truncate text-sm font-bold text-slate-100">{song.title}</h4>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-blue-400 mono bg-black/40 px-1.5 py-0.5 rounded">{song.key || '?'}</span>
+                                <button onClick={() => onToggleLock(song.uid)} className={`transition-all ${isLocked ? 'text-amber-500' : 'text-slate-600 hover:text-amber-400'}`}>
+                                    <Star size={18} fill={isLocked ? "currentColor" : "none"} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [state, setState] = useState(() => {
+                const saved = localStorage.getItem('setlist_pro_v4');
+                return saved ? JSON.parse(saved) : INITIAL_DATA;
+            });
+            const [showLibrary, setShowLibrary] = useState(false);
+            const [dragInfo, setDragInfo] = useState(null);
+
+            useEffect(() => {
+                localStorage.setItem('setlist_pro_v4', JSON.stringify(state));
+            }, [state]);
+
+            const handlePointerDown = (e, song, fromCol) => {
+                const startX = e.clientX;
+                const startY = e.clientY;
+                
+                const onMove = (moveEvent) => {
+                    const elementsUnder = document.elementsFromPoint(moveEvent.clientX, moveEvent.clientY);
+                    const colEl = elementsUnder.find(el => el.hasAttribute('data-col'));
+                    const hoverCol = colEl ? colEl.getAttribute('data-col') : null;
+                    setDragInfo({ song, fromCol, x: moveEvent.clientX, y: moveEvent.clientY, hoverCol });
+                };
+
+                const onUp = (upEvent) => {
+                    const elementsUnder = document.elementsFromPoint(upEvent.clientX, upEvent.clientY);
+                    const colEl = elementsUnder.find(el => el.hasAttribute('data-col'));
+                    const targetCol = colEl ? colEl.getAttribute('data-col') : null;
+
+                    if (targetCol && targetCol !== fromCol) {
+                        setState(prev => {
+                            const newState = JSON.parse(JSON.stringify(prev));
+                            newState.columns[fromCol] = newState.columns[fromCol].filter(s => s.uid !== song.uid);
+                            newState.columns[targetCol].push(song);
+                            return newState;
+                        });
+                    }
+                    setDragInfo(null);
+                    window.removeEventListener('pointermove', onMove);
+                    window.removeEventListener('pointerup', onUp);
+                };
+
+                window.addEventListener('pointermove', onMove);
+                window.addEventListener('pointerup', onUp);
+            };
+
+            const handleMix = () => {
+                setState(prev => {
+                    const newState = JSON.parse(JSON.stringify(prev));
+                    const pool = [];
+                    ['set1', 'rep', 'set2'].forEach(c => {
+                        if (!newState.locks.col[c]) {
+                            const unlocked = newState.columns[c].filter(s => !newState.locks.items[s.uid]);
+                            pool.push(...unlocked);
+                            newState.columns[c] = newState.columns[c].filter(s => newState.locks.items[s.uid]);
+                        }
+                    });
+                    
+                    // Shuffle pool
+                    for (let i = pool.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
+                    }
+
+                    pool.forEach((s, i) => {
+                        const target = i % 2 === 0 ? 'set1' : 'set2';
+                        newState.columns[target].push(s);
+                    });
+                    return newState;
+                });
+            };
+
+            const renderColumn = (id, label) => (
+                <div data-col={id} className={`flex h-full w-[350px] flex-col rounded-[2rem] glass-panel shrink-0 ${dragInfo?.hoverCol === id ? 'ring-2 ring-blue-500/50 bg-blue-500/10' : ''}`}>
+                    <div className="flex items-center justify-between p-6">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</h3>
+                            <span className="rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold">{state.columns[id].length}</span>
+                        </div>
+                        <button 
+                            onClick={() => setState(prev => ({...prev, locks: {...prev.locks, col: {...prev.locks.col, [id]: !prev.locks.col[id]}}}))}
+                            className={`p-2 rounded-full ${state.locks.col[id] ? 'text-amber-500 bg-amber-500/20' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            <Star size={16} fill={state.locks.col[id] ? "currentColor" : "none"} />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-4 pb-10 space-y-3">
+                        {state.columns[id].map((s, i) => (
+                            <SongCard 
+                                key={s.uid} song={s} index={i} colType={id}
+                                isLocked={state.locks.items[s.uid]}
+                                onToggleLock={(uid) => setState(prev => ({...prev, locks: {...prev.locks, items: {...prev.locks.items, [uid]: !prev.locks.items[uid]}}}))}
+                                onPointerDown={handlePointerDown}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="flex h-screen flex-col jazz-bg">
+                    <header className="glass-header no-print flex h-20 items-center justify-between px-8">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-900/40"><Music size={24}/></div>
+                            <input 
+                                className="bg-transparent text-xl font-black uppercase text-white outline-none" 
+                                value={state.concertName} 
+                                onChange={e => setState({...state, concertName: e.target.value})}
+                            />
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button onClick={handleMix} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase text-white hover:bg-blue-500 transition-all"><Wand2 size={16}/> Mix</button>
+                            <button onClick={() => window.print()} className="bg-white text-slate-900 p-2.5 rounded-xl hover:scale-105 transition-all"><Printer size={20}/></button>
+                        </div>
+                    </header>
+
+                    <main className="no-print flex-1 overflow-x-auto p-10">
+                        <div className="flex h-full gap-8 w-max mx-auto">
+                            {renderColumn('set1', 'Sæt 1')}
+                            {renderColumn('rep', 'Repertoire')}
+                            {renderColumn('set2', 'Sæt 2')}
+                        </div>
+                    </main>
+
+                    {/* PRINT VIEW */}
+                    <div className="print-only p-10 bg-white text-black min-h-screen">
+                        <h1 className="text-4xl font-black mb-10 border-b-4 border-black pb-4 uppercase">{state.concertName}</h1>
+                        {['set1', 'set2'].map(col => (
+                            <div key={col} className="mb-10 page-break">
+                                <h2 className="text-2xl font-bold uppercase mb-4 text-slate-400">{col === 'set1' ? 'Sæt 1' : 'Sæt 2'}</h2>
+                                <div className="space-y-4">
+                                    {state.columns[col].map((s, i) => (
+                                        <div key={s.uid} className="flex justify-between border-b border-slate-200 py-3">
+                                            <div className="flex gap-4">
+                                                <span className="font-bold text-slate-300">{i+1}</span>
+                                                <div>
+                                                    <div className="font-bold text-lg uppercase">{s.title}</div>
+                                                    <div className="text-sm text-slate-500 italic">{s.notes}</div>
+                                                </div>
+                                            </div>
+                                            <div className="font-mono font-bold">{s.key}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {dragInfo && (
+                        <div className="fixed pointer-events-none z-50 opacity-80" style={{ left: dragInfo.x - 20, top: dragInfo.y - 20 }}>
+                            <div className="w-64 bg-blue-600 p-4 rounded-2xl shadow-2xl text-white font-bold">{dragInfo.song.title}</div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
