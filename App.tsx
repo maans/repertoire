@@ -11,7 +11,7 @@ import { Music, ListMusic, Printer, Wand2, Star, LayoutGrid, HelpCircle } from '
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
     try {
-      const saved = localStorage.getItem('setlist_pro_state_v3') || localStorage.getItem('setlist_pro_state');
+      const saved = localStorage.getItem('setlist_pro_state_v3');
       return saved ? JSON.parse(saved) : INITIAL_DATA;
     } catch (e) {
       return INITIAL_DATA;
@@ -80,7 +80,9 @@ const App: React.FC = () => {
         if (current && current.hoverCol) {
           setState(prev => {
             const newState = JSON.parse(JSON.stringify(prev)) as AppState;
+            // Fjern fra gammel kolonne
             newState.columns[current.fromCol] = newState.columns[current.fromCol].filter(s => s.uid !== current.song.uid);
+            // Indsæt i ny kolonne
             const targetCol = current.hoverCol!;
             const targetIdx = current.hoverIndex ?? newState.columns[targetCol].length;
             newState.columns[targetCol].splice(targetIdx, 0, current.song);

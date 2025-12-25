@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setlist Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Babel Standalone: Gør det muligt at køre .tsx direkte i browseren på GitHub Pages -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -70,8 +72,8 @@
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.460.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
@@ -79,8 +81,8 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Denne linje er vigtig for at indlæse appen -->
-    <script type="module" src="./index.tsx"></script>
+    <!-- type="text/babel" fortæller Babel at den skal transpilere denne fil -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
