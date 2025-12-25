@@ -6,24 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setlist Manager Pro</title>
     
-    <!-- Eksterne biblioteker -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
-
     <style>
         :root { --stage-bg: #020617; }
         body {
@@ -32,78 +18,100 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             overflow: hidden;
+            height: 100vh;
         }
         .mono { font-family: 'JetBrains+Mono', monospace; }
         .jazz-bg {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), 
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), 
                               url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2500&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            height: 100%;
         }
         .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
         .glass-header {
-            background: rgba(2, 6, 23, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
         @media print {
-            body { background: white !important; color: black !important; overflow: visible !important; }
+            body { background: white !important; color: black !important; overflow: visible !important; height: auto !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            .page-break { page-break-after: always; }
+            .page-break { page-break-after: always; break-after: page; }
         }
         @media screen { .print-only { display: none !important; } }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
-<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react">
-        import React, { useState, useEffect, useMemo } from 'react';
-        import ReactDOM from 'react-dom/client';
+        // Vi bruger direkte URL'er for at undgå "sort skærm" (MIME/Importmap fejl)
+        import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@18.2.0';
+        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
         import { 
             Music, ListMusic, Printer, Wand2, Star, 
             LayoutGrid, HelpCircle, X, GripVertical, 
-            Trash2, Edit2, Plus, Download, Upload, RotateCcw,
-            ArrowUpDown
-        } from 'lucide-react';
+            Trash2, Edit2, Plus, Download, Upload, RotateCcw
+        } from 'https://esm.sh/lucide-react@0.460.0?external=react';
 
-        // --- CONSTANTS & TYPES ---
         const createSong = (title, key, tempo, notes, cues = '') => ({
             uid: Math.random().toString(36).substr(2, 9),
             title, key, tempo, notes, cues,
             createdAt: Date.now()
         });
 
+        // Hele din repertoire liste fra constants.ts
         const INITIAL_DATA = {
             concertName: 'Jazz Quartet Live',
             columns: {
                 set1: [],
                 rep: [
-                    createSong('All The Things You Are', 'Cm/eb', '138', 'Intro (4 sidste t.); vokal+sax', ''),
-                    createSong('Dansevise', 'Am', '160', 'Intro (8t u.sax); vokal; solo sax', ''),
-                    createSong('Desafinado', 'F', '132', 'Intro 8t u.sax; vokal; solo sax', ''),
-                    createSong('Nature Boy', 'Dm', '108', 'Intro (bas4t+gui4t); vokal', ''),
-                    createSong('Wave', 'Eb', '126', 'Intro 8t; vokal; solo gui', ''),
-                    createSong('Autumn Leaves', 'Cm', '138', 'Intro sax (rubato); vokal', ''),
+                    createSong('All The Things You Are', 'Cm/eb', '138', 'Intro (4 sidste t.); vokal+sax; solo bas/gui; solo sax; vokal (rit.)', ''),
+                    createSong('Brevet', 'Dm', '66', 'Intro (D.S. og ud); vokal; solo fl (AA+B); vokal (D.S. og ud)', ''),
+                    createSong('Dansevise', 'Am', '160', 'Intro (8t u.sax); vokal; solo sax; solo gui/vok (fra t. 21); coda (rubato)', ''),
+                    createSong('Deirdres Samba', 'Cm', '72', 'Intro (sidste 8t u.fl); vokal+ml spil (8t); vokal+ml spil (8t); vokal (slut på 4-slag)', ''),
+                    createSong('Desafinado', 'F', '132', 'Intro 8t u.sax; vokal; solo sax; vokal+sax fra C; outro (7t.)', ''),
+                    createSong('Dejlighedssang', 'Bb', '88', 'Instr sax+bas; vokal+gui; vokal+bas; tutti (f); solo sax; vokal (u.Sax); vokal+sax; tutti (p)', ''),
+                    createSong('Hvorfor er lykken så lunefuld', 'Fm', '54', 'Intro vers (t1-12 u.sax); vokal; solo sax; solo gui/vok (B); outro intro (rit bas)', ''),
+                    createSong('Libertango', 'Cm', '116', 'A0+A1-sax; B gui; A2 gui; A0+A1 vok; B+A2 sax; A0-sax; A1-gui+bas (lyrisk); B+A2 vokal+sax', ''),
+                    createSong('Nature Boy', 'Dm', '108', 'Intro (bas4t+gui4t); vokal (1/2 H 1/2 S); solo fl; vokal (H+S)/Da capo; outro (tutti)', ''),
+                    createSong('Quiet Night Of Quiet Stars', 'Bb', '63', 'Intro (t25 og ud); vokal; solo-sax; solo-gui; vokal+sax (u. rit.)', ''),
+                    createSong('Round Midnight', 'Cm', '60', 'Intro sax (solo)+gui; instr; vokal; solo-sax (2xA)/Gui (B+A); sax (2xA, mel)/vok (B+A)', ''),
+                    createSong('Sakta vi gå gennem stan', 'Bb', '108', 'Instr sax; vokal; solo gui/bas; vokal+sax (rit.)', ''),
+                    createSong('There Will Never Be Another You', 'C', '152', 'Intro (4 sidste t); vokal; chase vok/fl; chase gui/bas; vokal+fl; outro (3x3 t + sidste)', ''),
+                    createSong('Those Who Were', 'G + Bb', '50', 'Intro (4t); instr sax; vokal/+sax fra B; vokal+sax; solo sax; outro (4t.)', ''),
+                    createSong('This Masquerade', 'Bbm', '108', 'Intro (4t); instr sax+4t; vokal+4t; solo gui (AB)/vok+sax (A); outro (3 x t.13-16, rit)', ''),
+                    createSong('Wave', 'Eb', '126', 'Intro 8t; vokal; solo gui; solo sax AA/vok BC; outro (8t.)', ''),
+                    createSong('Autumn Leaves', 'Cm', '138', 'Intro sax (rubato); instr sax; vokal; solo sax; outro (rit)', ''),
+                    createSong('What It Means To Me', 'Cm/Eb', '60', 'Instr sax; vokal; solo-sax+vok; solo gui; vokal+sax fra B', ''),
                 ],
                 set2: [],
             },
             locks: { col: { set1: false, rep: false, set2: false }, items: {} }
         };
 
-        // --- COMPONENTS ---
         const SongCard = ({ song, index, colType, isLocked, onToggleLock, onPointerDown }) => (
-            <div className={`group relative select-none rounded-2xl border transition-all duration-300 ${isLocked ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/5 bg-white/[0.03] hover:bg-white/[0.08]'}`}>
+            <div className={`group relative select-none rounded-2xl border transition-all duration-300 ${isLocked ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/5 bg-white/[0.04] hover:bg-white/[0.08]'}`}>
                 <div className="flex items-center gap-3 p-3">
                     <div 
                         onPointerDown={!isLocked ? (e) => onPointerDown(e, song, colType) : undefined}
@@ -113,10 +121,10 @@
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                            <h4 className="truncate text-sm font-bold text-slate-100">{song.title}</h4>
+                            <h4 className="truncate text-sm font-bold text-slate-100 uppercase tracking-tight">{song.title}</h4>
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-black text-blue-400 mono bg-black/40 px-1.5 py-0.5 rounded">{song.key || '?'}</span>
-                                <button onClick={() => onToggleLock(song.uid)} className={`transition-all ${isLocked ? 'text-amber-500' : 'text-slate-600 hover:text-amber-400'}`}>
+                                <button onClick={() => onToggleLock(song.uid)} className={`p-1 transition-all ${isLocked ? 'text-amber-500' : 'text-slate-600 hover:text-amber-400'}`}>
                                     <Star size={18} fill={isLocked ? "currentColor" : "none"} />
                                 </button>
                             </div>
@@ -126,23 +134,18 @@
             </div>
         );
 
-        // --- MAIN APP ---
         const App = () => {
             const [state, setState] = useState(() => {
-                const saved = localStorage.getItem('setlist_pro_v4');
+                const saved = localStorage.getItem('setlist_v6');
                 return saved ? JSON.parse(saved) : INITIAL_DATA;
             });
-            const [showLibrary, setShowLibrary] = useState(false);
             const [dragInfo, setDragInfo] = useState(null);
 
             useEffect(() => {
-                localStorage.setItem('setlist_pro_v4', JSON.stringify(state));
+                localStorage.setItem('setlist_v6', JSON.stringify(state));
             }, [state]);
 
             const handlePointerDown = (e, song, fromCol) => {
-                const startX = e.clientX;
-                const startY = e.clientY;
-                
                 const onMove = (moveEvent) => {
                     const elementsUnder = document.elementsFromPoint(moveEvent.clientX, moveEvent.clientY);
                     const colEl = elementsUnder.find(el => el.hasAttribute('data-col'));
@@ -184,7 +187,6 @@
                         }
                     });
                     
-                    // Shuffle pool
                     for (let i = pool.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -199,20 +201,20 @@
             };
 
             const renderColumn = (id, label) => (
-                <div data-col={id} className={`flex h-full w-[350px] flex-col rounded-[2rem] glass-panel shrink-0 ${dragInfo?.hoverCol === id ? 'ring-2 ring-blue-500/50 bg-blue-500/10' : ''}`}>
+                <div data-col={id} className={`flex h-full w-[340px] flex-col rounded-[2rem] glass-panel shrink-0 transition-all ${dragInfo?.hoverCol === id ? 'ring-2 ring-blue-500 bg-blue-500/10' : ''}`}>
                     <div className="flex items-center justify-between p-6">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{label}</h3>
                             <span className="rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold">{state.columns[id].length}</span>
                         </div>
                         <button 
                             onClick={() => setState(prev => ({...prev, locks: {...prev.locks, col: {...prev.locks.col, [id]: !prev.locks.col[id]}}}))}
-                            className={`p-2 rounded-full ${state.locks.col[id] ? 'text-amber-500 bg-amber-500/20' : 'text-slate-500 hover:text-white'}`}
+                            className={`p-2 rounded-xl ${state.locks.col[id] ? 'text-amber-500 bg-amber-500/20' : 'text-slate-500 hover:text-white'}`}
                         >
                             <Star size={16} fill={state.locks.col[id] ? "currentColor" : "none"} />
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-4 pb-10 space-y-3">
+                    <div className="flex-1 overflow-y-auto px-4 pb-12 space-y-3 custom-scrollbar">
                         {state.columns[id].map((s, i) => (
                             <SongCard 
                                 key={s.uid} song={s} index={i} colType={id}
@@ -227,18 +229,19 @@
 
             return (
                 <div className="flex h-screen flex-col jazz-bg">
-                    <header className="glass-header no-print flex h-20 items-center justify-between px-8">
+                    <header className="glass-header no-print flex h-20 items-center justify-between px-8 shrink-0">
                         <div className="flex items-center gap-4">
-                            <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-900/40"><Music size={24}/></div>
+                            <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-900/40 text-white"><Music size={24}/></div>
                             <input 
-                                className="bg-transparent text-xl font-black uppercase text-white outline-none" 
+                                className="bg-transparent text-xl font-black uppercase tracking-tighter text-white outline-none" 
                                 value={state.concertName} 
                                 onChange={e => setState({...state, concertName: e.target.value})}
                             />
                         </div>
                         <div className="flex items-center gap-3">
-                            <button onClick={handleMix} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase text-white hover:bg-blue-500 transition-all"><Wand2 size={16}/> Mix</button>
-                            <button onClick={() => window.print()} className="bg-white text-slate-900 p-2.5 rounded-xl hover:scale-105 transition-all"><Printer size={20}/></button>
+                            <button onClick={handleMix} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-500 active:scale-95 transition-all shadow-xl shadow-blue-600/20"><Wand2 size={16}/> Mix</button>
+                            <button onClick={() => window.print()} className="bg-white text-slate-900 p-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl"><Printer size={20}/></button>
+                            <button onClick={() => confirm('Reset Alt?') && setState(INITIAL_DATA)} className="bg-slate-800 text-slate-400 p-2.5 rounded-xl hover:text-white transition-all"><RotateCcw size={18}/></button>
                         </div>
                     </header>
 
@@ -251,22 +254,25 @@
                     </main>
 
                     {/* PRINT VIEW */}
-                    <div className="print-only p-10 bg-white text-black min-h-screen">
-                        <h1 className="text-4xl font-black mb-10 border-b-4 border-black pb-4 uppercase">{state.concertName}</h1>
+                    <div className="print-only p-12 bg-white text-black min-h-screen">
+                        <h1 className="text-5xl font-black mb-12 border-b-8 border-black pb-4 uppercase tracking-tighter">{state.concertName}</h1>
                         {['set1', 'set2'].map(col => (
-                            <div key={col} className="mb-10 page-break">
-                                <h2 className="text-2xl font-bold uppercase mb-4 text-slate-400">{col === 'set1' ? 'Sæt 1' : 'Sæt 2'}</h2>
-                                <div className="space-y-4">
+                            <div key={col} className="mb-16 page-break">
+                                <h2 className="text-3xl font-black uppercase mb-6 text-slate-300 border-b-2 border-slate-100 pb-2">{col === 'set1' ? 'Første Sæt' : 'Andet Sæt'}</h2>
+                                <div className="space-y-0">
                                     {state.columns[col].map((s, i) => (
-                                        <div key={s.uid} className="flex justify-between border-b border-slate-200 py-3">
-                                            <div className="flex gap-4">
-                                                <span className="font-bold text-slate-300">{i+1}</span>
+                                        <div key={s.uid} className="flex justify-between items-start border-b border-slate-200 py-6">
+                                            <div className="flex gap-8">
+                                                <span className="font-black text-4xl text-slate-200 w-12">{i+1}</span>
                                                 <div>
-                                                    <div className="font-bold text-lg uppercase">{s.title}</div>
-                                                    <div className="text-sm text-slate-500 italic">{s.notes}</div>
+                                                    <div className="font-black text-3xl uppercase tracking-tight">{s.title}</div>
+                                                    <div className="text-lg text-slate-600 mt-1 uppercase font-bold tracking-wide">{s.notes}</div>
                                                 </div>
                                             </div>
-                                            <div className="font-mono font-bold">{s.key}</div>
+                                            <div className="text-right">
+                                                <div className="font-mono font-black text-3xl">{s.key || '-'}</div>
+                                                <div className="font-mono text-slate-400 font-bold">{s.tempo} BPM</div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -275,8 +281,10 @@
                     </div>
 
                     {dragInfo && (
-                        <div className="fixed pointer-events-none z-50 opacity-80" style={{ left: dragInfo.x - 20, top: dragInfo.y - 20 }}>
-                            <div className="w-64 bg-blue-600 p-4 rounded-2xl shadow-2xl text-white font-bold">{dragInfo.song.title}</div>
+                        <div className="fixed pointer-events-none z-50 opacity-90 shadow-2xl" style={{ left: dragInfo.x - 20, top: dragInfo.y - 20 }}>
+                            <div className="w-64 bg-blue-600 p-4 rounded-2xl text-white font-black uppercase tracking-tight shadow-2xl rotate-2">
+                                {dragInfo.song.title}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -286,6 +294,5 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
