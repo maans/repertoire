@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { AppState, SongItem, ColumnType, SortOrder, ColumnSort } from './types';
-import { INITIAL_DATA } from './constants';
-import { SongCard } from './components/SongCard';
-import { LibraryModal } from './components/LibraryModal';
-import { HelpModal } from './components/HelpModal';
-import { mixSets, splitItems, sortUnlocked } from './services/logic';
+import { AppState, SongItem, ColumnType, SortOrder, ColumnSort } from './types.ts';
+import { INITIAL_DATA } from './constants.ts';
+import { SongCard } from './components/SongCard.tsx';
+import { LibraryModal } from './components/LibraryModal.tsx';
+import { HelpModal } from './components/HelpModal.tsx';
+import { mixSets, splitItems, sortUnlocked } from './services/logic.ts';
 import { Music, ListMusic, Printer, Wand2, Star, LayoutGrid, HelpCircle } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -79,8 +79,7 @@ const App: React.FC = () => {
       setDragInfo(current => {
         if (current && current.hoverCol) {
           setState(prev => {
-            const newState = JSON.parse(newStateState(prev)) as AppState;
-            function newStateState(p: AppState) { return JSON.stringify(p); }
+            const newState = JSON.parse(JSON.stringify(prev)) as AppState;
             newState.columns[current.fromCol] = newState.columns[current.fromCol].filter(s => s.uid !== current.song.uid);
             const targetCol = current.hoverCol!;
             const targetIdx = current.hoverIndex ?? newState.columns[targetCol].length;

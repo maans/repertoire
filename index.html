@@ -20,7 +20,6 @@
         }
         .mono { font-family: 'JetBrains+Mono', monospace; }
         
-        /* Jazz Background Setup - Much clearer overlay */
         .jazz-bg {
             background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4)), 
                               url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2500&auto=format&fit=crop');
@@ -29,7 +28,6 @@
             background-attachment: fixed;
         }
 
-        /* Print Logik */
         @media screen {
             .print-only { display: none !important; }
         }
@@ -43,7 +41,6 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -62,7 +59,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* Sørg for at tekst popper på lysere baggrund */
         .text-shadow-sm {
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
@@ -74,13 +70,17 @@
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.460.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
+    <!-- Denne linje er vigtig for at indlæse appen -->
+    <script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
